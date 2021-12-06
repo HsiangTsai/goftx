@@ -139,10 +139,12 @@ func Connect(ctx context.Context, ch chan Response, channels, symbols []string, 
 
 	conn, _, err := websocket.DefaultDialer.Dial("wss://ftx.com/ws/", nil)
 	if err != nil {
+		close(ch)
 		return err
 	}
 
 	if err := subscribe(conn, channels, symbols); err != nil {
+		close(ch)
 		return err
 	}
 
@@ -239,6 +241,7 @@ func Connect(ctx context.Context, ch chan Response, channels, symbols []string, 
 			ch <- res
 
 		}
+		close(ch)
 	}()
 
 	return nil
@@ -251,15 +254,18 @@ func ConnectForPrivate(ctx context.Context, ch chan Response, key, secret string
 
 	conn, _, err := websocket.DefaultDialer.Dial("wss://ftx.com/ws/", nil)
 	if err != nil {
+		close(ch)
 		return err
 	}
 
 	// sign up
 	if err := signature(conn, key, secret, subaccount); err != nil {
+		close(ch)
 		return err
 	}
 
 	if err := subscribe(conn, channels, nil); err != nil {
+		close(ch)
 		return err
 	}
 
@@ -337,8 +343,8 @@ func ConnectForPrivate(ctx context.Context, ch chan Response, key, secret string
 
 			ch <- res
 		}
+		close(ch)
 	}()
-
 	return nil
 }
 
